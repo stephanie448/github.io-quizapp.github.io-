@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quiz-container {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(-10px);
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 15px;
+            background: #f8f8f8;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .option:nth-child(1) { animation: slideIn 0.3s 0.1s forwards; }
+        .option:nth-child(2) { animation: slideIn 0.3s 0.2s forwards; }
+        .option:nth-child(3) { animation: slideIn 0.3s 0.3s forwards; }
+        .option:nth-child(4) { animation: slideIn 0.3s 0.4s forwards; }
+
+        .option:hover {
+            background: #e0e0e0;
+        }
+
+        .option.correct {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .option.wrong {
+            background: #ff5252;
+            color: white;
+        }
+
+        .feedback {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .feedback.wrong {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .next-btn {
+            display: none;
+            width: 100%;
+            padding: 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .next-btn:hover {
+            background: #1976D2;
+        }
+
+        .result {
+            text-align: center;
+            display: none;
+        }
+
+        .retry-btn {
+            padding: 15px 30px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div id="quiz">
+            <div class="question"></div>
+            <div class="options"></div>
+            <div class="feedback"></div>
+            <button class="next-btn">Next Question</button>
+        </div>
+        <div class="result">
+            <h2>Quiz Complete!</h2>
+            <p class="score-text"></p>
+            <button class="retry-btn">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the capital of France?",
+                options: ["London", "Berlin", "Paris", "Madrid"],
+                correct: 2
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                correct: 1
+            },
+            {
+                question: "What is the largest mammal in the world?",
+                options: ["African Elephant", "Blue Whale", "Giraffe", "Hippopotamus"],
+                correct: 1
+            },
+            {
+                question: "Which element has the chemical symbol 'O'?",
+                options: ["Gold", "Silver", "Oxygen", "Iron"],
+                correct: 2
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        const quizContainer = document.getElementById('quiz');
+        const resultContainer = document.querySelector('.result');
+        const questionEl = document.querySelector('.question');
+        const optionsEl = document.querySelector('.options');
+        const feedbackEl = document.querySelector('.feedback');
+        const nextBtn = document.querySelector('.next-btn');
+        const retryBtn = document.querySelector('.retry-btn');
+        const scoreText = document.querySelector('.score-text');
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            questionEl.textContent = question.question;
+
+            optionsEl.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(index));
+                optionsEl.appendChild(button);
+            });
+
+            canAnswer = true;
+            nextBtn.style.display = 'none';
+            feedbackEl.style.display = 'none';
+        }
+
+        function checkAnswer(selectedIndex) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const correct = questions[currentQuestion].correct;
+            const options = document.querySelectorAll('.option');
+
+            if (selectedIndex === correct) {
+                options[selectedIndex].classList.add('correct');
+                feedbackEl.textContent = 'Correct!';
+                feedbackEl.className = 'feedback correct';
+                score++;
+            } else {
+                options[selectedIndex].classList.add('wrong');
+                options[correct].classList.add('correct');
+                feedbackEl.textContent = 'Wrong! The correct answer was ' + questions[currentQuestion].options[correct];
+                feedbackEl.className = 'feedback wrong';
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'block';
+        }
+
+        function showResult() {
+            quizContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+            
+            const percentage = (score / questions.length) * 100;
+            let message = `You scored ${score} out of ${questions.length} (${percentage}%)\n`;
+            
+            if (percentage >= 80) {
+                message += "Excellent! Congratulations on your high score!";
+            } else if (percentage >= 60) {
+                message += "Good job! You did well!";
+            } else {
+                message += "Keep practicing! You can do better!";
+            }
+            
+            scoreText.textContent = message;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        });
+
+        retryBtn.addEventListener('click', () => {
+            currentQuestion = 0;
+            score = 0;
+            quizContainer.style.display = 'block';
+            resultContainer.style.display = 'none';
+            showQuestion();
+        });
+
+        showQuestion();
+    </script>
+</body>
+</html>
+
+h
+
+
+
+
+
+
